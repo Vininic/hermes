@@ -1,5 +1,6 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
 import { DEFAULT_LOCALE, DICTIONARIES, LOCALE_LABELS, SUPPORTED_LOCALES, type Dictionary, type Locale } from "./dictionaries";
+export type { Locale };
 
 /**
  * Hermes i18n provider — mirrors Chronos'/Kairos'/Pluto's `lib/i18n/I18nProvider.tsx`

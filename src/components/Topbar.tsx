@@ -1,5 +1,5 @@
 import { useLocation } from "react-router-dom";
-import { CircleHelp, Inbox, LayoutDashboard, PlugZap, Settings2, Sparkles, Workflow } from "lucide-react";
+import { Activity, CircleHelp, Inbox, LayoutDashboard, Settings2, Sparkles, Workflow } from "lucide-react";
 import { HermesMark } from "@/components/HermesLogo";
 import { LanguageToggle } from "@/components/LanguageToggle";
 import { ThemeToggle } from "@/components/ThemeToggle";
@@ -18,8 +18,8 @@ export default function Topbar() {
     location.pathname === "/dashboard" ? { icon: LayoutDashboard, label: nav.dashboard } :
     location.pathname === "/outbox" ? { icon: Inbox, label: nav.outbox } :
     location.pathname === "/flows" ? { icon: Workflow, label: nav.flows } :
-    location.pathname === "/runs" ? { icon: PlugZap, label: nav.runs } :
-    location.pathname === "/channels" ? { icon: PlugZap, label: nav.channels } :
+    location.pathname === "/runs" ? { icon: Activity, label: nav.runs } :
+    location.pathname === "/channels" ? { icon: Activity, label: nav.channels } :
     location.pathname === "/aetheris" ? { icon: Sparkles, label: nav.aetheris } :
     location.pathname === "/settings" ? { icon: Settings2, label: nav.settings } :
     location.pathname === "/about" ? { icon: CircleHelp, label: nav.about } :

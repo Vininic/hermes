@@ -1,0 +1,1 @@
+export { createStoreSync } from "./storeSync";

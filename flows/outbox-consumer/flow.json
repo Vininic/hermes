@@ -1,0 +1,19 @@
+{
+  "name": "Outbox Consumer",
+  "description": "Polls hermes-outbox user_data for pending messages, delivers via Resend email, writes back sent/failed status.",
+  "trigger": "Cron: every minute",
+  "nodes": [
+    { "id": "schedule", "name": "Schedule Trigger", "type": "n8n-nodes-base.scheduleTrigger", "position": [0, 0] },
+    { "id": "supabase", "name": "Supabase: fetch pending", "type": "n8n-nodes-base.supabase", "position": [300, 0] },
+    { "id": "code-split", "name": "Split by channel", "type": "n8n-nodes-base.code", "position": [600, 0] },
+    { "id": "resend", "name": "Resend email", "type": "n8n-nodes-base.httpRequest", "position": [900, -150] },
+    { "id": "code-write", "name": "Write sent status", "type": "n8n-nodes-base.code", "position": [1200, 0] }
+  ],
+  "connections": [
+    { "source": "schedule", "target": "supabase" },
+    { "source": "supabase", "target": "code-split" },
+    { "source": "code-split", "target": "resend" },
+    { "source": "resend", "target": "code-write" }
+  ],
+  "lastRunStatus": "never"
+}

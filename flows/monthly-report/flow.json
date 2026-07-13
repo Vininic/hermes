@@ -1,0 +1,17 @@
+{
+  "name": "Monthly Report",
+  "description": "Triggered by Pluto's schedule: generates a monthly financial report and sends it via email.",
+  "trigger": "Cron: first day of every month at 08:00",
+  "nodes": [
+    { "id": "schedule", "name": "Cron: 1st of month", "type": "n8n-nodes-base.scheduleTrigger", "position": [0, 0] },
+    { "id": "pluto-data", "name": "Fetch Pluto ledger", "type": "n8n-nodes-base.supabase", "position": [300, 0] },
+    { "id": "code-gen", "name": "Generate report HTML", "type": "n8n-nodes-base.code", "position": [600, 0] },
+    { "id": "resend", "name": "Send via Resend", "type": "n8n-nodes-base.httpRequest", "position": [900, 0] }
+  ],
+  "connections": [
+    { "source": "schedule", "target": "pluto-data" },
+    { "source": "pluto-data", "target": "code-gen" },
+    { "source": "code-gen", "target": "resend" }
+  ],
+  "lastRunStatus": "never"
+}

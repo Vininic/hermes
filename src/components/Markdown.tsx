@@ -29,6 +29,7 @@ export default function Markdown({ text }: { text: string }) {
   const lines = text.split("\n");
   const blocks: ReactNode[] = [];
   let list: { ordered: boolean; items: string[] } | null = null;
+  let code: { lang: string; lines: string[] } | null = null;
 
   const flushList = (key: string) => {
     if (!list) return;
@@ -44,6 +45,30 @@ export default function Markdown({ text }: { text: string }) {
   };
 
   lines.forEach((line, idx) => {
+    const fence = /^```(\w*)\s*$/.exec(line.trim());
+
+    // Inside a fenced code block: accumulate raw lines until the closing fence,
+    // rendered as a real <pre> instead of falling through to the paragraph case.
+    if (code) {
+      if (fence) {
+        blocks.push(
+          <pre key={`code-${idx}`} className="my-1.5 overflow-x-auto rounded-md border border-border bg-background/60 p-2.5 text-[0.85em] leading-relaxed">
+            <code className={`language-${code.lang}`}>{code.lines.join("\n")}</code>
+          </pre>,
+        );
+        code = null;
+      } else {
+        code.lines.push(line);
+      }
+      return;
+    }
+
+    if (fence) {
+      flushList(`list-${idx}`);
+      code = { lang: fence[1] || "text", lines: [] };
+      return;
+    }
+
     const heading = /^(#{1,3})\s+(.*)/.exec(line);
     const bullet = /^\s*[-*]\s+(.*)/.exec(line);
     const numbered = /^\s*\d+[.)]\s+(.*)/.exec(line);
@@ -69,6 +94,14 @@ export default function Markdown({ text }: { text: string }) {
     }
   });
   flushList("list-end");
+  if (code) {
+    // Unclosed fence — still render what was captured rather than dropping it.
+    blocks.push(
+      <pre key="code-end" className="my-1.5 overflow-x-auto rounded-md border border-border bg-background/60 p-2.5 text-[0.85em] leading-relaxed">
+        <code className={`language-${code.lang}`}>{code.lines.join("\n")}</code>
+      </pre>,
+    );
+  }
 
   return <div className="space-y-1.5">{blocks.map((b, i) => <Fragment key={i}>{b}</Fragment>)}</div>;
 }

@@ -1,10 +1,13 @@
-import { Component, type ReactNode } from "react";
+import { Component, type ReactNode, useEffect } from "react";
 import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { ThemeProvider } from "@/lib/theme/ThemeProvider";
-import { I18nProvider } from "@/lib/i18n/I18nProvider";
+import { I18nProvider, useI18n, type Locale } from "@/lib/i18n/I18nProvider";
+import { useTheme } from "@/lib/theme/ThemeProvider";
 import { AuthProvider, useAuth } from "@/lib/auth";
+import { OutboxProvider } from "@/lib/outbox/store";
+import { pullSuitePrefs, pushSuitePrefs } from "@/lib/prefs";
 import AppLayout from "@/components/AppLayout";
 import Landing from "@/pages/Landing";
 import Login from "@/pages/Login";
@@ -39,6 +42,26 @@ function RequireAuth({ children }: { children: JSX.Element }) {
 // PLUTO.md M0: "lib/sync/ was not copied yet — there's no domain to sync
 // until M1's lib/ledger exists").
 
+function SyncPrefs() {
+  const { isCloud } = useAuth();
+  const { setTheme } = useTheme();
+  const { setLocale } = useI18n();
+
+  useEffect(() => {
+    if (!isCloud) return;
+    let cancelled = false;
+    void pullSuitePrefs().then((prefs) => {
+      if (cancelled) return;
+      if (prefs?.theme) setTheme(prefs.theme);
+      if (prefs?.locale && (prefs.locale === "pt" || prefs.locale === "en"))
+        setLocale(prefs.locale as Locale);
+    });
+    return () => { cancelled = true; };
+  }, [isCloud, setTheme, setLocale]);
+
+  return null;
+}
+
 const App = () => (
   <ErrorBoundary>
     <ThemeProvider>
@@ -47,6 +70,8 @@ const App = () => (
           <Toaster />
           <BrowserRouter>
             <AuthProvider>
+              <OutboxProvider>
+              <SyncPrefs />
               <Routes>
                 <Route path="/" element={<Landing />} />
                 <Route path="/login" element={<Login />} />
@@ -62,6 +87,7 @@ const App = () => (
                 </Route>
                 <Route path="*" element={<NotFound />} />
               </Routes>
+              </OutboxProvider>
             </AuthProvider>
           </BrowserRouter>
         </TooltipProvider>

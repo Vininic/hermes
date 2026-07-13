@@ -34,3 +34,13 @@ export const PALETTE: { name: string; hex: string }[] = [
 ];
 
 export const DEFAULT_PROJECT_COLOR = "#B96A82";
+
+/** Suite app colors — used for source chips on outbox messages.
+ *  Matches the identity table in SUITE-ARCHITECTURE.md §5. */
+export const SOURCE_COLORS: Record<string, string> = {
+  pluto: "#C49A3A",
+  chronos: "#B7863B",
+  kairos: "#C98FA6",
+  chiron: "#A63446",
+  hermes: "#3EB8CC",
+};

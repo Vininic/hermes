@@ -1,3 +1,4 @@
+import { lazy, Suspense } from "react";
 import { Link } from "react-router-dom";
 import { ArrowRight } from "lucide-react";
 import Logo, { HermesMark } from "@/components/HermesLogo";
@@ -5,6 +6,8 @@ import { LanguageToggle } from "@/components/LanguageToggle";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { Button } from "@/components/ui/button";
 import { useT } from "@/lib/i18n/I18nProvider";
+
+const KineticRelay = lazy(() => import("@/components/three/KineticRelay"));
 
 const CHRONOS_URL = "https://github.com/Vininic/chronos-the-art-of-time";
 
@@ -61,11 +64,15 @@ export default function Landing() {
             </a>
           </div>
         </div>
-        {/* 3D kinetic-relay anchor lands in M5 (see HERMES.md) — a static
-            mark panel holds this spot at M0, same relative placement. */}
         <div className="relative h-[420px] md:h-[520px] lg:col-span-5">
-          <div className="bg-signal absolute inset-0 grid place-items-center overflow-hidden rounded-[28px] shadow-elevated">
-            <HermesMark className="h-32 w-32 animate-float-slow text-secondary-soft opacity-90" />
+          <div className="bg-signal absolute inset-0 overflow-hidden rounded-[28px] shadow-elevated">
+            <Suspense fallback={
+              <div className="grid h-full w-full place-items-center">
+                <HermesMark className="h-32 w-32 text-secondary-soft opacity-90" />
+              </div>
+            }>
+              <KineticRelay />
+            </Suspense>
           </div>
         </div>
       </section>

@@ -1,0 +1,9 @@
+{
+  "parameters": {
+    "language": "javascript",
+    "code": "const admin = require('@supabase/supabase-js').createClient(\n  process.env.SUPABASE_URL,\n  process.env.SUPABASE_SERVICE_ROLE_KEY\n);\n\n// Write the heartbeat timestamp to a known row\nconst { data } = await admin\n  .from('user_data')\n  .upsert({\n    key: 'hermes-flows',\n    value: { version: 1, flows: [], runs: [], heartbeatAt: new Date().toISOString() }\n  }, { onConflict: 'user_id, key' });\n\nreturn [{ status: 'ok', data }];"
+  },
+  "type": "n8n-nodes-base.code",
+  "typeVersion": 2,
+  "position": [600, 0]
+}

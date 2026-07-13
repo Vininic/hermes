@@ -1,0 +1,15 @@
+{
+  "name": "Heartbeat",
+  "description": "Timestamps hermes-flows user_data every minute to signal the Hermes Dashboard that the engine is alive.",
+  "trigger": "Cron: every minute",
+  "nodes": [
+    { "id": "schedule", "name": "Schedule Trigger", "type": "n8n-nodes-base.scheduleTrigger", "position": [0, 0] },
+    { "id": "http", "name": "HTTP Request", "type": "n8n-nodes-base.httpRequest", "position": [300, 0] },
+    { "id": "code", "name": "Write heartbeat", "type": "n8n-nodes-base.code", "position": [600, 0] }
+  ],
+  "connections": [
+    { "source": "schedule", "target": "http" },
+    { "source": "http", "target": "code" }
+  ],
+  "lastRunStatus": "never"
+}

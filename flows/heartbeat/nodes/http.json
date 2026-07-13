@@ -1,0 +1,13 @@
+{
+  "parameters": {
+    "method": "POST",
+    "url": "{{ $env.SUPABASE_URL }}/rest/v1/rpc/bump_outbox_consumer_rate",
+    "authentication": "genericCredentialType",
+    "genericAuthType": "httpHeaderAuth",
+    "sendBody": true,
+    "bodyParameters": {}
+  },
+  "type": "n8n-nodes-base.httpRequest",
+  "typeVersion": 4,
+  "position": [300, 0]
+}
