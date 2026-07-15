@@ -1,22 +1,28 @@
+import { useMemo } from "react";
+import { useSearchParams } from "react-router-dom";
 import { AlertCircle, CheckCircle2, Clock } from "lucide-react";
+import { useFlowsDocument } from "@/lib/flows/store";
 import { useT } from "@/lib/i18n/I18nProvider";
 import { cn } from "@/lib/utils";
-
-const SAMPLE_RUNS = [
-  { id: "1", flowName: "Outbox Consumer", status: "success" as const, startedAt: new Date(Date.now() - 2 * 60000).toISOString(), durationMs: 1200, messageCount: 3 },
-  { id: "2", flowName: "Outbox Consumer", status: "success" as const, startedAt: new Date(Date.now() - 4 * 60000).toISOString(), durationMs: 800, messageCount: 1 },
-  { id: "3", flowName: "Heartbeat", status: "success" as const, startedAt: new Date(Date.now() - 5 * 60000).toISOString(), durationMs: 400, messageCount: 0 },
-];
 
 export default function Runs() {
   const t = useT();
   const R = t.hermes.runs;
+  const doc = useFlowsDocument();
+  const [params] = useSearchParams();
+  const flowFilter = params.get("flow");
+
+  const runs = useMemo(
+    () => (flowFilter ? doc.runs.filter((r) => r.flowId === flowFilter) : doc.runs),
+    [doc.runs, flowFilter],
+  );
 
   return (
     <div className="space-y-6">
       <header>
         <div className="text-[11px] uppercase tracking-[0.22em] text-secondary">{R.eyebrow}</div>
         <h1 className="font-display mt-1.5 text-4xl text-primary">{R.title}</h1>
+        {flowFilter && <p className="mt-1 text-sm text-muted-foreground">{R.filteredBy}: {flowFilter}</p>}
       </header>
 
       <div className="rounded-xl border border-amber-500/20 bg-amber-500/5 p-4 text-sm text-amber-600 dark:text-amber-400">
@@ -26,7 +32,7 @@ export default function Runs() {
         </div>
       </div>
 
-      {SAMPLE_RUNS.length === 0 ? (
+      {runs.length === 0 ? (
         <div className="hermes-card flex flex-col items-center justify-center p-12 text-center">
           <Clock className="h-8 w-8 text-muted-foreground/50" />
           <p className="mt-3 text-sm text-muted-foreground">{R.noRuns}</p>
@@ -44,7 +50,7 @@ export default function Runs() {
               </tr>
             </thead>
             <tbody>
-              {SAMPLE_RUNS.map((run) => (
+              {runs.map((run) => (
                 <tr key={run.id} className="border-b border-border last:border-0 hover:bg-card/30">
                   <td className="px-4 py-3 font-medium text-primary">{run.flowName}</td>
                   <td className="px-4 py-3">
@@ -57,7 +63,7 @@ export default function Runs() {
                     </span>
                   </td>
                   <td className="px-4 py-3 text-muted-foreground">{new Date(run.startedAt).toLocaleString()}</td>
-                  <td className="px-4 py-3 text-muted-foreground">{(run.durationMs / 1000).toFixed(1)}s</td>
+                  <td className="px-4 py-3 text-muted-foreground">{run.durationMs != null ? `${(run.durationMs / 1000).toFixed(1)}s` : "—"}</td>
                   <td className="px-4 py-3 text-muted-foreground">{run.messageCount}</td>
                 </tr>
               ))}

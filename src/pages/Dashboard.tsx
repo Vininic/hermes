@@ -1,8 +1,7 @@
-import { useMemo } from "react";
 import { Activity, AlertCircle, CheckCircle2, Clock, Inbox, Radio, Workflow } from "lucide-react";
 import { useOutbox } from "@/lib/outbox/store";
 import { getEngineStatus } from "@/lib/flows/service";
-import type { FlowsDocument } from "@/lib/flows/types";
+import { useFlowsDocument } from "@/lib/flows/store";
 import { CHANNEL_DEFINITIONS } from "@/lib/channels/types";
 import { useT } from "@/lib/i18n/I18nProvider";
 import { cn } from "@/lib/utils";
@@ -37,13 +36,8 @@ export default function Dashboard() {
   const t = useT();
   const D = t.hermes.dashboard;
   const { doc, counts } = useOutbox();
-
-  const engineStatus = useMemo(() => {
-    const raw = localStorage.getItem("hermes.flows.v1");
-    const flowsDoc: FlowsDocument | null = raw ? JSON.parse(raw) as FlowsDocument : null;
-    if (!flowsDoc) return { online: false, lastSeenAgo: null };
-    return getEngineStatus(flowsDoc);
-  }, []);
+  const flowsDoc = useFlowsDocument();
+  const engineStatus = getEngineStatus(flowsDoc);
 
   return (
     <div className="space-y-6">
