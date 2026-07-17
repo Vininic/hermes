@@ -4,6 +4,7 @@ import {
   Activity, CircleHelp, Cloud, Inbox, LayoutDashboard,
   Menu, MonitorSmartphone, PanelLeftClose, Radio, Settings2, Sparkles, Workflow,
 } from "lucide-react";
+import DemoPrompt from "@/components/DemoPrompt";
 import Logo, { HermesMark } from "@/components/HermesLogo";
 import ProfileDialog from "@/components/ProfileDialog";
 import Topbar from "@/components/Topbar";
@@ -149,6 +150,7 @@ export default function AppLayout() {
       </aside>
 
       <ProfileDialog open={profileOpen} onOpenChange={setProfileOpen} />
+      <DemoPrompt />
 
       <div className="flex min-w-0 flex-1 flex-col overflow-hidden">
         <header className="flex items-center justify-between border-b border-sidebar-border bg-sidebar px-4 py-3 md:hidden">

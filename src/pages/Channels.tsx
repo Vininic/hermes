@@ -1,15 +1,29 @@
 import { useState } from "react";
-import { CheckCircle2, ExternalLink, Radio, Send, Terminal, XCircle } from "lucide-react";
+import { ExternalLink, Mail, MessageCircle, Send, Terminal } from "lucide-react";
 import { useT } from "@/lib/i18n/I18nProvider";
-import { cn } from "@/lib/utils";
 import { toast } from "@/components/ui/sonner";
 import { Button } from "@/components/ui/button";
+import { alpha } from "@/lib/color";
 import { CHANNEL_DEFINITIONS, type ChannelKind } from "@/lib/channels/types";
 
 const CHANNEL_SECRETS: Record<ChannelKind, string[]> = {
   email: ["RESEND_API_KEY", "REPORT_FROM_EMAIL"],
   telegram: ["TELEGRAM_BOT_TOKEN"],
   whatsapp: ["WHATSAPP_ACCESS_TOKEN", "WHATSAPP_PHONE_NUMBER_ID"],
+};
+
+// Distinct icon + accent per channel so the three cards read as different
+// things at a glance — reusing suite palette hues (lib/color.ts PALETTE)
+// rather than each channel's own trademarked brand color.
+const CHANNEL_ICONS: Record<ChannelKind, typeof Mail> = {
+  email: Mail,
+  telegram: Send,
+  whatsapp: MessageCircle,
+};
+const CHANNEL_COLORS: Record<ChannelKind, string> = {
+  email: "#3EB8CC",   // Hermes' own cyan — the hosted-first channel
+  telegram: "#4A8AB5", // Sky
+  whatsapp: "#6D8A3C", // Moss
 };
 
 export default function Channels() {
@@ -49,24 +63,20 @@ export default function Channels() {
       </header>
 
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-        {CHANNEL_DEFINITIONS.map((ch) => (
-          <div key={ch.kind} className="hermes-card p-6">
+        {CHANNEL_DEFINITIONS.map((ch) => {
+          const Icon = CHANNEL_ICONS[ch.kind];
+          const color = CHANNEL_COLORS[ch.kind];
+          return (
+          <div key={ch.kind} className="hermes-card overflow-hidden p-6">
             <div className="flex items-start justify-between">
               <div className="flex items-center gap-3">
-                <div className="grid h-10 w-10 place-items-center rounded-lg bg-primary/10 text-primary">
-                  <Radio className="h-5 w-5" />
+                <div className="grid h-10 w-10 shrink-0 place-items-center rounded-lg" style={{ backgroundColor: alpha(color, "1F"), color }}>
+                  <Icon className="h-5 w-5" />
                 </div>
                 <div>
                   <h2 className="font-display text-lg text-primary">{ch.label}</h2>
-                  <span className={cn(
-                    "inline-flex items-center gap-1 text-xs font-medium",
-                    ch.configured ? "text-secondary" : "text-muted-foreground",
-                  )}>
-                    {ch.configured ? (
-                      <><CheckCircle2 className="h-3 w-3" /> {C.configured}</>
-                    ) : (
-                      <><XCircle className="h-3 w-3" /> {C.notConfigured}</>
-                    )}
+                  <span className="inline-flex items-center gap-1 text-xs font-medium text-muted-foreground">
+                    {C.statusUnverified}
                   </span>
                 </div>
               </div>
@@ -104,7 +114,8 @@ export default function Channels() {
               </Button>
             </div>
           </div>
-        ))}
+          );
+        })}
       </div>
     </div>
   );

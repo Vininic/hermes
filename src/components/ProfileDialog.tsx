@@ -4,7 +4,9 @@ import { Check, Cloud, LogOut, MonitorSmartphone, Pencil, X } from "lucide-react
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { useAuth } from "@/lib/auth";
+import { useOutbox } from "@/lib/outbox/store";
 import { useT } from "@/lib/i18n/I18nProvider";
+import { cn } from "@/lib/utils";
 
 interface Props {
   open: boolean;
@@ -12,13 +14,14 @@ interface Props {
 }
 
 /** A single-profile snapshot — no carousel/multi-slot switching: the suite
- *  account is one identity, and this dialog is its one home. No domain stats
- *  yet (no Outbox until M2) — mirrors Pluto's `ProfileDialog.tsx` shape,
- *  trimmed to identity + sign-out until there's real data to summarize. */
+ *  account is one identity, and this dialog is its one home. Mirrors
+ *  Pluto's `ProfileDialog.tsx` shape: identity + 3 domain stat tiles + sign-out. */
 export default function ProfileDialog({ open, onOpenChange }: Props) {
   const { session, signOut, updateName } = useAuth();
+  const { counts } = useOutbox();
   const navigate = useNavigate();
   const t = useT();
+  const L = t.hermes.outbox;
 
   const [editing, setEditing] = useState(false);
   const [nameDraft, setNameDraft] = useState("");
@@ -76,6 +79,23 @@ export default function ProfileDialog({ open, onOpenChange }: Props) {
         </div>
 
         <div className="space-y-3 px-4 pb-4">
+          <div className="grid grid-cols-3 gap-2">
+            <div className="rounded-lg border border-sidebar-border bg-sidebar-accent/30 p-2.5 text-center">
+              <div className="text-[9px] uppercase tracking-wider text-sidebar-foreground/50">{L.pending}</div>
+              <div className="font-display num mt-0.5 text-base text-sidebar-accent-foreground">{counts.pending}</div>
+            </div>
+            <div className="rounded-lg border border-sidebar-border bg-sidebar-accent/30 p-2.5 text-center">
+              <div className="text-[9px] uppercase tracking-wider text-sidebar-foreground/50">{L.sent}</div>
+              <div className="font-display num mt-0.5 text-base text-sidebar-accent-foreground">{counts.sent}</div>
+            </div>
+            <div className="rounded-lg border border-sidebar-border bg-sidebar-accent/30 p-2.5 text-center">
+              <div className="text-[9px] uppercase tracking-wider text-sidebar-foreground/50">{L.failed}</div>
+              <div className={cn("font-display num mt-0.5 text-base text-sidebar-accent-foreground", counts.failed > 0 && "text-destructive")}>
+                {counts.failed}
+              </div>
+            </div>
+          </div>
+
           <Button
             variant="outline"
             className="h-9 w-full bg-sidebar/50 text-xs"

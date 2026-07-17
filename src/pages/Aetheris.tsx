@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { Link } from "react-router-dom";
 import {
   Check, Copy, FileText, History, LayoutList, Loader2, PanelRightClose, PanelRightOpen,
-  Send, Settings2, Sparkles, Square, Undo2, Volume2,
+  Send, Sparkles, Square, Undo2, Volume2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -18,7 +19,7 @@ import {
 } from "@/lib/ai/chatSessions";
 import {
   loadSettings, saveSettings, DEFAULT_MODELS, PROVIDER_LABELS,
-  type AISettings, type AIProvider, type AutonomyLevel,
+  type AISettings, type AutonomyLevel,
 } from "@/lib/ai/settings";
 import { streamChat, type ChatMessage } from "@/lib/ai/providers";
 import { buildSystemPrompt } from "@/lib/ai/context";
@@ -48,7 +49,6 @@ export default function Aetheris() {
   const [tab, setTab] = useState<Tab>("overview");
   const [history, setHistory] = useState<HistoryEntry[]>(() => loadHistory());
   const [settings, setSettings] = useState<AISettings>(() => loadSettings());
-  const [settingsOpen, setSettingsOpen] = useState(false);
   const [speakingId, setSpeakingId] = useState<string | null>(null);
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const chatEndRef = useRef<HTMLDivElement>(null);
@@ -267,17 +267,6 @@ export default function Aetheris() {
         <div className="flex items-center gap-2">
           <button
             type="button"
-            onClick={() => setSettingsOpen((o) => !o)}
-            className={cn(
-              "grid h-9 w-9 place-items-center rounded-md border border-border bg-card text-muted-foreground transition-colors hover:text-foreground",
-              settingsOpen && "border-secondary text-secondary",
-            )}
-            aria-label="AI settings"
-          >
-            <Settings2 className="h-4 w-4" />
-          </button>
-          <button
-            type="button"
             onClick={() => setSidebarOpen((o) => !o)}
             className="hidden h-9 w-9 items-center justify-center rounded-md border border-border bg-card text-muted-foreground transition-colors hover:text-foreground lg:grid"
             aria-label={sidebarOpen ? A.tabHistory : A.tabOverview}
@@ -286,44 +275,6 @@ export default function Aetheris() {
           </button>
         </div>
       </header>
-
-      {settingsOpen && (
-        <div className="mb-4 flex shrink-0 flex-wrap items-end gap-3 rounded-xl border border-border bg-card p-4">
-          <label className="flex flex-col gap-1 text-[10px] uppercase tracking-widest text-muted-foreground">
-            Provider
-            <select
-              value={settings.provider}
-              onChange={(e) => updateSettings({ provider: e.target.value as AIProvider, model: "" })}
-              className="rounded-md border border-border bg-surface-raised px-2 py-1.5 text-sm text-foreground"
-            >
-              {Object.entries(PROVIDER_LABELS).map(([id, label]) => (
-                <option key={id} value={id}>{label}</option>
-              ))}
-            </select>
-          </label>
-          {settings.provider !== "gemini-hosted" && settings.provider !== "openrouter-hosted" && settings.provider !== "ollama" && (
-            <label className="flex flex-1 flex-col gap-1 text-[10px] uppercase tracking-widest text-muted-foreground">
-              API key
-              <input
-                type="password"
-                value={settings.apiKey}
-                onChange={(e) => updateSettings({ apiKey: e.target.value })}
-                placeholder="sk-…"
-                className="rounded-md border border-border bg-surface-raised px-2 py-1.5 text-sm text-foreground"
-              />
-            </label>
-          )}
-          <label className="flex flex-col gap-1 text-[10px] uppercase tracking-widest text-muted-foreground">
-            Model
-            <input
-              value={settings.model}
-              onChange={(e) => updateSettings({ model: e.target.value })}
-              placeholder={DEFAULT_MODELS[settings.provider]}
-              className="w-48 rounded-md border border-border bg-surface-raised px-2 py-1.5 text-sm text-foreground"
-            />
-          </label>
-        </div>
-      )}
 
       <div className="flex min-h-0 flex-1 gap-5">
         <div className="flex min-w-0 flex-1 flex-col overflow-hidden rounded-xl border border-border bg-card">
@@ -394,7 +345,9 @@ export default function Aetheris() {
 
           <div className="shrink-0 border-t border-border p-3">
             <div className="mx-auto flex w-full max-w-3xl items-center justify-between px-1 pb-1.5 text-[10px] text-muted-foreground">
-              <span>{PROVIDER_LABELS[settings.provider]} · {settings.model.trim() || DEFAULT_MODELS[settings.provider]}</span>
+              <Link to="/settings" className="hover:text-foreground">
+                {A.poweredBy(PROVIDER_LABELS[settings.provider], settings.model.trim() || DEFAULT_MODELS[settings.provider])}
+              </Link>
               <span className="num" title={`${usedTokens} tokens (estimado)`}>
                 {contextPct}% contexto · {usedTokens.toLocaleString()} tokens (estimado)
               </span>

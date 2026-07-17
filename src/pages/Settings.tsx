@@ -1,4 +1,12 @@
-import { Moon, Sun } from "lucide-react";
+import { useState } from "react";
+import { Moon, Sparkles, Sun } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  DEFAULT_MODELS, PROVIDER_LABELS, loadSettings, saveSettings,
+  type AISettings, type AIProvider, type AutonomyLevel,
+} from "@/lib/ai/settings";
 import { useT } from "@/lib/i18n/I18nProvider";
 import { useTheme } from "@/lib/theme/ThemeProvider";
 import { cn } from "@/lib/utils";
@@ -13,14 +21,19 @@ function Section({ eyebrow, title, children }: { eyebrow: string; title: string;
   );
 }
 
-/** Appearance only at M0 — the Aetheris provider/model section (per
- *  SUITE-ARCHITECTURE.md §3a, "Provider & model settings live on the
- *  Settings page") joins once `lib/ai/` is copied in, alongside the real
- *  Aetheris chat. No AI settings to configure yet. See HERMES.md. */
 export default function Settings() {
   const { theme, setTheme } = useTheme();
   const t = useT();
   const L = t.hermes.settings;
+  const [ai, setAi] = useState<AISettings>(loadSettings);
+
+  function patchAi(patch: Partial<AISettings>) {
+    setAi((s) => {
+      const next = { ...s, ...patch };
+      saveSettings(next);
+      return next;
+    });
+  }
 
   return (
     <div className="mx-auto w-full max-w-3xl space-y-6">
@@ -49,6 +62,56 @@ export default function Settings() {
             </button>
           ))}
         </div>
+      </Section>
+
+      <Section eyebrow={L.aetherisEyebrow} title={L.aetherisTitle}>
+        <div className="grid gap-4 sm:grid-cols-2">
+          <div className="space-y-2">
+            <Label className="text-xs uppercase tracking-[0.18em] text-muted-foreground">{L.provider}</Label>
+            <Select value={ai.provider} onValueChange={(v) => patchAi({ provider: v as AIProvider, model: "" })}>
+              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectContent>
+                {(Object.keys(PROVIDER_LABELS) as AIProvider[]).map((p) => (
+                  <SelectItem key={p} value={p}>{PROVIDER_LABELS[p]}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="ai-model" className="text-xs uppercase tracking-[0.18em] text-muted-foreground">{L.model}</Label>
+            <Input id="ai-model" value={ai.model} onChange={(e) => patchAi({ model: e.target.value })} placeholder={DEFAULT_MODELS[ai.provider]} disabled={ai.provider === "gemini-hosted" || ai.provider === "openrouter-hosted"} />
+          </div>
+          {ai.provider === "gemini-hosted" || ai.provider === "openrouter-hosted" ? (
+            <div className="flex items-center gap-2 rounded-md border border-secondary/30 bg-secondary/10 p-3 text-xs text-muted-foreground sm:col-span-2">
+              <Sparkles className="h-3.5 w-3.5 shrink-0 text-secondary" />
+              {L.hostedNote}
+            </div>
+          ) : ai.provider !== "ollama" ? (
+            <div className="space-y-2 sm:col-span-2">
+              <Label htmlFor="ai-key" className="text-xs uppercase tracking-[0.18em] text-muted-foreground">{L.apiKey}</Label>
+              <Input id="ai-key" type="password" value={ai.apiKey} onChange={(e) => patchAi({ apiKey: e.target.value })} placeholder={L.apiKeyPlaceholder} />
+            </div>
+          ) : (
+            <div className="space-y-2 sm:col-span-2">
+              <Label htmlFor="ai-url" className="text-xs uppercase tracking-[0.18em] text-muted-foreground">{L.ollamaUrl}</Label>
+              <Input id="ai-url" value={ai.baseUrl} onChange={(e) => patchAi({ baseUrl: e.target.value })} placeholder="http://localhost:11434" />
+            </div>
+          )}
+          <div className="space-y-2 sm:col-span-2">
+            <Label className="text-xs uppercase tracking-[0.18em] text-muted-foreground">{L.autonomy}</Label>
+            <Select value={ai.autonomy} onValueChange={(v) => patchAi({ autonomy: v as AutonomyLevel })}>
+              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="confirm">{L.autonomyConfirm}</SelectItem>
+                <SelectItem value="auto">{L.autonomyAuto}</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+        <p className="mt-3 flex items-center gap-1.5 text-[11px] text-muted-foreground">
+          <Sparkles className="h-3 w-3 text-secondary" />
+          {L.keysNote}
+        </p>
       </Section>
     </div>
   );

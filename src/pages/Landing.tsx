@@ -1,26 +1,37 @@
-import { lazy, Suspense } from "react";
 import { Link } from "react-router-dom";
 import { ArrowRight } from "lucide-react";
 import Logo, { HermesMark } from "@/components/HermesLogo";
+import KineticRelay from "@/components/three/KineticRelay";
 import { LanguageToggle } from "@/components/LanguageToggle";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { Button } from "@/components/ui/button";
+import { alpha, SOURCE_COLORS } from "@/lib/color";
 import { useT } from "@/lib/i18n/I18nProvider";
 
-const KineticRelay = lazy(() => import("@/components/three/KineticRelay"));
-
 const CHRONOS_URL = "https://github.com/Vininic/chronos-the-art-of-time";
+const OLYMPUS_GILT = "#C9B99A";
+
+const SUITE_URLS: Record<string, { href: string; color: string }> = {
+  Chronos: { href: CHRONOS_URL, color: SOURCE_COLORS.chronos },
+  Kairos: { href: "https://kairos-suite.vercel.app", color: SOURCE_COLORS.kairos },
+  Pluto: { href: "https://pluto-suite.vercel.app", color: SOURCE_COLORS.pluto },
+  Hermes: { href: "/dashboard", color: SOURCE_COLORS.hermes },
+  Chiron: { href: "https://chiron-nine.vercel.app", color: SOURCE_COLORS.chiron },
+  Olympus: { href: "https://olympus-virid.vercel.app", color: OLYMPUS_GILT },
+};
 
 export default function Landing() {
   const t = useT();
   const L = t.hermes.landing;
 
-  const SUITE = [
-    { n: "Chronos", live: true, href: CHRONOS_URL },
-    { n: "Kairos", live: true, href: "https://kairos-suite.vercel.app" },
-    { n: "Pluto", live: true, href: "https://pluto-suite.vercel.app" },
-    { n: "Hermes", live: true, href: "/dashboard" },
-  ].map((app, i) => ({ ...app, r: L.suiteApps[i].role, d: L.suiteApps[i].desc }));
+  const SUITE = (["Chronos", "Kairos", "Pluto", "Hermes", "Chiron", "Olympus"] as const).map((n, i) => ({
+    n,
+    live: true,
+    href: SUITE_URLS[n].href,
+    color: SUITE_URLS[n].color,
+    r: L.suiteApps[i].role,
+    d: L.suiteApps[i].desc,
+  }));
 
   return (
     <div className="hermes-surface min-h-screen">
@@ -66,13 +77,7 @@ export default function Landing() {
         </div>
         <div className="relative h-[420px] md:h-[520px] lg:col-span-5">
           <div className="bg-signal absolute inset-0 overflow-hidden rounded-[28px] shadow-elevated">
-            <Suspense fallback={
-              <div className="grid h-full w-full place-items-center">
-                <HermesMark className="h-32 w-32 text-secondary-soft opacity-90" />
-              </div>
-            }>
-              <KineticRelay />
-            </Suspense>
+            <KineticRelay />
           </div>
         </div>
       </section>
@@ -105,19 +110,19 @@ export default function Landing() {
           {SUITE.map((p) => {
             const card = (
               <div
-                className={`relative h-full overflow-hidden rounded-2xl p-6 ${
-                  p.live ? "bg-signal border border-secondary/20 shadow-elevated" : "border bg-card text-primary"
-                }`}
+                className="relative h-full overflow-hidden rounded-2xl border p-6 shadow-elevated"
+                style={{ backgroundColor: alpha(p.color, "14"), borderColor: alpha(p.color, "40") }}
               >
-                <div className={`text-xs uppercase tracking-[0.22em] ${p.live ? "text-secondary-soft" : "opacity-70"}`}>{p.r}</div>
-                <div className={`font-display mt-2 text-3xl ${p.live ? "text-sidebar-foreground" : ""}`}>{p.n}</div>
-                <p className={`mt-3 text-sm ${p.live ? "text-sidebar-foreground/70" : "text-muted-foreground"}`}>{p.d}</p>
+                <div className="text-xs uppercase tracking-[0.22em]" style={{ color: p.color }}>{p.r}</div>
+                <div className="font-display mt-2 text-3xl text-primary">{p.n}</div>
+                <p className="mt-3 text-sm text-muted-foreground">{p.d}</p>
                 <div className="mt-6 text-xs">
-                  {p.live ? (
-                    <span className="inline-flex items-center gap-1.5 rounded-full bg-secondary px-2.5 py-1 font-medium text-primary-deep">{L.live}</span>
-                  ) : (
-                    <span className="inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-muted-foreground">{L.inAtelier}</span>
-                  )}
+                  <span
+                    className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 font-medium"
+                    style={{ backgroundColor: p.color, color: "#0b0a09" }}
+                  >
+                    {L.live}
+                  </span>
                 </div>
               </div>
             );
