@@ -1,9 +1,9 @@
-import { useState } from "react";
 import { ExternalLink, Mail, MessageCircle, Send, Terminal } from "lucide-react";
 import { useT } from "@/lib/i18n/I18nProvider";
 import { toast } from "@/components/ui/sonner";
 import { Button } from "@/components/ui/button";
 import { alpha } from "@/lib/color";
+import { useSendTest } from "@/lib/channels/useSendTest";
 import { CHANNEL_DEFINITIONS, type ChannelKind } from "@/lib/channels/types";
 
 const CHANNEL_SECRETS: Record<ChannelKind, string[]> = {
@@ -29,30 +29,11 @@ const CHANNEL_COLORS: Record<ChannelKind, string> = {
 export default function Channels() {
   const t = useT();
   const C = t.hermes.channels;
-  const [sending, setSending] = useState<ChannelKind | null>(null);
+  const { sending, sendTest } = useSendTest();
 
   async function handleTestSend(kind: ChannelKind) {
-    setSending(kind);
-    try {
-      const { createMessage } = await import("@/lib/outbox/service");
-      const { getSupabaseClient } = await import("@/lib/supabase/client");
-      const supabase = getSupabaseClient();
-      if (!supabase) {
-        toast(C.testFailed, { description: "Cloud account required" });
-        return;
-      }
-      const msg = createMessage("hermes", kind, "custom", `Test message (${kind})`, { text: `This is a test message sent from Hermes at ${new Date().toISOString()}.` });
-      const pendingDoc = { version: 1, messages: [msg] };
-      await supabase.from("user_data").upsert(
-        { key: "hermes-outbox", value: pendingDoc, version: Date.now() },
-        { onConflict: "user_id, key" },
-      );
-      toast(C.testSent);
-    } catch {
-      toast(C.testFailed);
-    } finally {
-      setSending(null);
-    }
+    const ok = await sendTest(kind);
+    toast(ok ? C.testSent : C.testFailed);
   }
 
   return (

@@ -48,6 +48,9 @@ const pt = {
     updatedElsewhereDesc: "Seus dados foram atualizados.",
     customColor: "Cor personalizada",
     percentComplete: (n: number): string => `${n}% concluído`,
+    search: "Buscar",
+    searchPlaceholder: "Buscar mensagens, fluxos…",
+    noResults: "Nada encontrado.",
   },
   hermes: {
     nav: {
@@ -209,6 +212,7 @@ const pt = {
       overview: "Visão geral",
       overviewCount: (n: number): string => `${n} fluxos no catálogo`,
       diagramTitle: "Diagrama",
+      viewRuns: "Ver execuções",
     },
     runs: {
       eyebrow: "Execuções",
@@ -235,6 +239,7 @@ const pt = {
       testFailed: "Falha no teste.",
       configDocs: "Documentação",
       configSecret: "Esta chave vive como secret no Supabase. Defina-a via: supabase secrets set",
+      testSendDesc: "Escolha um canal para enfileirar uma mensagem de teste.",
     },
     dashboard: {
       eyebrow: "Painel",
@@ -315,6 +320,9 @@ const en: typeof pt = {
     updatedElsewhereDesc: "Your data was updated.",
     customColor: "Custom color",
     percentComplete: (n: number): string => `${n}% complete`,
+    search: "Search",
+    searchPlaceholder: "Search messages, flows…",
+    noResults: "Nothing found.",
   },
   hermes: {
     nav: {
@@ -476,6 +484,7 @@ const en: typeof pt = {
       overview: "Overview",
       overviewCount: (n: number): string => `${n} flows in the catalog`,
       diagramTitle: "Diagram",
+      viewRuns: "View runs",
     },
     runs: {
       eyebrow: "Runs",
@@ -502,6 +511,7 @@ const en: typeof pt = {
       testFailed: "Test failed.",
       configDocs: "Documentation",
       configSecret: "This key lives as a Supabase secret. Set it via: supabase secrets set",
+      testSendDesc: "Pick a channel to queue a test message.",
     },
     dashboard: {
       eyebrow: "Dashboard",
