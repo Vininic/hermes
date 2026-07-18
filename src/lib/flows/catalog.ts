@@ -28,3 +28,28 @@ export function flowBounds(flow: FlowDefinition): { minX: number; minY: number; 
   const ys = flow.nodes.map((n) => n.position[1]);
   return { minX: Math.min(...xs), minY: Math.min(...ys), maxX: Math.max(...xs), maxY: Math.max(...ys) };
 }
+
+export interface FlowCatalogTranslation {
+  name: string;
+  description: string;
+  trigger: string;
+  nodes: Record<string, string>;
+}
+
+/** Overlays a locale's translations (see dictionaries.ts hermes.flows.catalog)
+ *  onto a flow. The committed n8n export (flows/*.json) stays untranslated —
+ *  it's a genuine artifact of what actually runs, not something to rewrite —
+ *  this only changes what gets displayed. Falls back to the raw (English)
+ *  strings for any flow/node the translation table doesn't cover, so a
+ *  missing entry degrades to "shown in English" rather than blank. */
+export function localizeFlow(flow: FlowDefinition, translations: Record<string, FlowCatalogTranslation>): FlowDefinition {
+  const tr = translations[flow.id];
+  if (!tr) return flow;
+  return {
+    ...flow,
+    name: tr.name,
+    description: tr.description,
+    trigger: tr.trigger,
+    nodes: flow.nodes.map((n) => ({ ...n, name: tr.nodes[n.id] ?? n.name })),
+  };
+}

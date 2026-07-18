@@ -58,7 +58,10 @@ function generateFlows(): FlowsDocument {
   const catalog = loadFlowCatalog();
   const byId = (id: string) => catalog.find((f) => f.id === id)!;
 
-  const run = (flowId: string, daysBack: number, hour: number, status: "success" | "failed", durationMs: number, messageCount: number, error?: string) => {
+  const run = (
+    flowId: string, daysBack: number, hour: number, status: "success" | "failed", durationMs: number,
+    messageCount: number, error?: string, failedNodeId?: string,
+  ) => {
     const flow = byId(flowId);
     const startedAt = daysAgo(daysBack, hour, 0);
     const record: RunRecord = {
@@ -71,6 +74,7 @@ function generateFlows(): FlowsDocument {
       durationMs,
       messageCount,
       ...(error ? { error } : {}),
+      ...(failedNodeId ? { failedNodeId } : {}),
     };
     doc = addRun(doc, record);
   };
@@ -80,7 +84,10 @@ function generateFlows(): FlowsDocument {
   for (let d = 5; d >= 0; d--) {
     run("outbox-consumer", d, 8, "success", 640, d === 3 ? 0 : 1);
   }
-  run("outbox-consumer", 3, 9, "failed", 1200, 0, "Resend API: rate limit exceeded");
+  // The rate-limit failure happens at the node that actually calls Resend —
+  // "resend" in outbox-consumer's flow.json — so the failed-node highlight
+  // has something real to point at instead of a made-up id.
+  run("outbox-consumer", 3, 9, "failed", 1200, 0, "Resend API: rate limit exceeded", "resend");
   run("monthly-report", 14, 8, "success", 3400, 1);
   run("heartbeat", 0, 8, "success", 210, 0);
 

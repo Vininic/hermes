@@ -2,15 +2,26 @@ import { useMemo } from "react";
 import { useSearchParams } from "react-router-dom";
 import { AlertCircle, CheckCircle2, Clock } from "lucide-react";
 import { useFlowsDocument } from "@/lib/flows/store";
+import { loadFlowCatalog, localizeFlow } from "@/lib/flows/catalog";
 import { useT } from "@/lib/i18n/I18nProvider";
 import { cn } from "@/lib/utils";
 
 export default function Runs() {
   const t = useT();
   const R = t.hermes.runs;
+  const F = t.hermes.flows;
   const doc = useFlowsDocument();
   const [params] = useSearchParams();
   const flowFilter = params.get("flow");
+
+  // Localized so a run's flow name and failed-node name read in the current
+  // locale — run.flowName itself is whatever was captured in English at
+  // write time and isn't trustworthy for display (see lib/flows/catalog.ts
+  // localizeFlow).
+  const catalogById = useMemo(() => {
+    const map = new Map(loadFlowCatalog().map((f) => [f.id, localizeFlow(f, F.catalog)]));
+    return map;
+  }, [F.catalog]);
 
   const runs = useMemo(
     () => (flowFilter ? doc.runs.filter((r) => r.flowId === flowFilter) : doc.runs),
@@ -22,7 +33,11 @@ export default function Runs() {
       <header>
         <div className="text-[11px] uppercase tracking-[0.22em] text-secondary">{R.eyebrow}</div>
         <h1 className="font-display mt-1.5 text-4xl text-primary">{R.title}</h1>
-        {flowFilter && <p className="mt-1 text-sm text-muted-foreground">{R.filteredBy}: {flowFilter}</p>}
+        {flowFilter && (
+          <p className="mt-1 text-sm text-muted-foreground">
+            {R.filteredBy}: {catalogById.get(flowFilter)?.name ?? flowFilter}
+          </p>
+        )}
       </header>
 
       <div className="rounded-xl border border-amber-500/20 bg-amber-500/5 p-4 text-sm text-amber-600 dark:text-amber-400">
@@ -50,23 +65,32 @@ export default function Runs() {
               </tr>
             </thead>
             <tbody>
-              {runs.map((run) => (
-                <tr key={run.id} className="border-b border-border last:border-0 hover:bg-card/30">
-                  <td className="px-4 py-3 font-medium text-primary">{run.flowName}</td>
-                  <td className="px-4 py-3">
-                    <span className={cn(
-                      "inline-flex items-center gap-1 text-xs font-medium",
-                      run.status === "success" ? "text-secondary" : "text-red-400",
-                    )}>
-                      {run.status === "success" ? <CheckCircle2 className="h-3 w-3" /> : <AlertCircle className="h-3 w-3" />}
-                      {R[run.status]}
-                    </span>
-                  </td>
-                  <td className="px-4 py-3 text-muted-foreground">{new Date(run.startedAt).toLocaleString()}</td>
-                  <td className="px-4 py-3 text-muted-foreground">{run.durationMs != null ? `${(run.durationMs / 1000).toFixed(1)}s` : "—"}</td>
-                  <td className="px-4 py-3 text-muted-foreground">{run.messageCount}</td>
-                </tr>
-              ))}
+              {runs.map((run) => {
+                const flow = catalogById.get(run.flowId);
+                const failedNode = run.status === "failed" && run.failedNodeId
+                  ? flow?.nodes.find((n) => n.id === run.failedNodeId)
+                  : undefined;
+                return (
+                  <tr key={run.id} className="border-b border-border last:border-0 hover:bg-card/30">
+                    <td className="px-4 py-3 font-medium text-primary">{flow?.name ?? run.flowName}</td>
+                    <td className="px-4 py-3">
+                      <span className={cn(
+                        "inline-flex items-center gap-1 text-xs font-medium",
+                        run.status === "success" ? "text-secondary" : "text-red-400",
+                      )}>
+                        {run.status === "success" ? <CheckCircle2 className="h-3 w-3" /> : <AlertCircle className="h-3 w-3" />}
+                        {R[run.status]}
+                      </span>
+                      {failedNode && (
+                        <div className="mt-0.5 text-[11px] text-muted-foreground">{F.failedAt} {failedNode.name}</div>
+                      )}
+                    </td>
+                    <td className="px-4 py-3 text-muted-foreground">{new Date(run.startedAt).toLocaleString()}</td>
+                    <td className="px-4 py-3 text-muted-foreground">{run.durationMs != null ? `${(run.durationMs / 1000).toFixed(1)}s` : "—"}</td>
+                    <td className="px-4 py-3 text-muted-foreground">{run.messageCount}</td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         </div>

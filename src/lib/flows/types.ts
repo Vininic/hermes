@@ -31,6 +31,12 @@ export interface RunRecord {
   durationMs?: number;
   messageCount: number;
   error?: string;
+  /** Which node in the flow's node list (FlowNode.id) the failure happened
+   *  at — only meaningful when status is "failed". Populated by the demo
+   *  generator here; the real production Edge Function that writes run
+   *  records lives outside this repo and would need its own update to
+   *  start populating this for real failures. */
+  failedNodeId?: string;
 }
 
 export interface FlowsDocument {

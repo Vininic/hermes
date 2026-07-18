@@ -4,7 +4,7 @@ import {
   AlertCircle, CalendarClock, CheckCircle2, Clock, Code2, Database, Radio, Send, type LucideIcon,
 } from "lucide-react";
 import { format } from "date-fns";
-import { loadFlowCatalog, flowBounds } from "@/lib/flows/catalog";
+import { loadFlowCatalog, flowBounds, localizeFlow } from "@/lib/flows/catalog";
 import { getLatestRun } from "@/lib/flows/service";
 import { useFlowsDocument } from "@/lib/flows/store";
 import type { FlowDefinition, FlowNode, RunRecord } from "@/lib/flows/types";
@@ -92,8 +92,10 @@ function FlowGlyph({ flow, color }: { flow: FlowDefinition; color: string }) {
 /** Absolute-positioned nodes + gradient, arrow-terminated edges over a
  *  dot-grid canvas texture, straight from the committed n8n export
  *  (flows/*.json) — not an n8n iframe, not a hand-typed mock. Node width is
- *  measured from the real name so labels never clip. */
-function FlowDiagram({ flow }: { flow: FlowDefinition }) {
+ *  measured from the real name so labels never clip. `failedNodeId`, when
+ *  set, draws a dashed red outline around that one node so a failed run
+ *  points at exactly where it broke instead of just saying "failed". */
+function FlowDiagram({ flow, failedNodeId }: { flow: FlowDefinition; failedNodeId?: string }) {
   const bounds = flowBounds(flow);
   const widths = new Map(flow.nodes.map((n) => [n.id, nodeWidth(n)]));
   const widestAtMaxX = Math.max(...flow.nodes.filter((n) => n.position[0] === bounds.maxX).map((n) => widths.get(n.id)!));
@@ -148,12 +150,19 @@ function FlowDiagram({ flow }: { flow: FlowDefinition }) {
           const p = at(n.position);
           const w = widths.get(n.id)!;
           const { icon: Icon, color } = NODE_KIND[n.type] ?? DEFAULT_KIND;
+          const isFailed = n.id === failedNodeId;
           return (
             <g key={n.id}>
-              <rect x={p.x} y={p.y} width={w} height={NODE_H} rx={7} fill="hsl(var(--card))" stroke={color} strokeOpacity={0.4} strokeWidth={1.5} />
-              <rect x={p.x} y={p.y} width={4} height={NODE_H} rx={2} fill={color} />
+              {isFailed && (
+                <rect
+                  x={p.x - 4} y={p.y - 4} width={w + 8} height={NODE_H + 8} rx={10}
+                  fill="none" stroke="#F87171" strokeWidth={2} strokeDasharray="4 3"
+                />
+              )}
+              <rect x={p.x} y={p.y} width={w} height={NODE_H} rx={7} fill="hsl(var(--card))" stroke={isFailed ? "#F87171" : color} strokeOpacity={isFailed ? 0.9 : 0.4} strokeWidth={1.5} />
+              <rect x={p.x} y={p.y} width={4} height={NODE_H} rx={2} fill={isFailed ? "#F87171" : color} />
               <foreignObject x={p.x + 14} y={p.y + (NODE_H - 22) / 2} width={22} height={22}>
-                <Icon size={16} color={color} strokeWidth={2} />
+                <Icon size={16} color={isFailed ? "#F87171" : color} strokeWidth={2} />
               </foreignObject>
               <text x={p.x + ICON_W} y={p.y + NODE_H / 2 + 4} fontSize={12.5} fontWeight={500} fill="hsl(var(--foreground))">{n.name}</text>
             </g>
@@ -169,7 +178,7 @@ export default function Flows() {
   const F = t.hermes.flows;
   const navigate = useNavigate();
   const doc = useFlowsDocument();
-  const catalog = useMemo(() => loadFlowCatalog(), []);
+  const catalog = useMemo(() => loadFlowCatalog().map((f) => localizeFlow(f, F.catalog)), [F.catalog]);
   const [params, setParams] = useSearchParams();
 
   const selectedId = params.get("flow") && catalog.some((f) => f.id === params.get("flow")) ? params.get("flow")! : catalog[0]?.id;
@@ -177,6 +186,9 @@ export default function Flows() {
   const selectedLatest = selectedFlow ? getLatestRun(doc, selectedFlow.id) : undefined;
   const selectedStatus = selectedLatest?.status ?? null;
   const selectedAccent = selectedFlow ? (FLOW_ACCENT[selectedFlow.id] ?? DEFAULT_FLOW_ACCENT) : DEFAULT_FLOW_ACCENT;
+  const failedNode = selectedFlow && selectedLatest?.failedNodeId
+    ? selectedFlow.nodes.find((n) => n.id === selectedLatest.failedNodeId)
+    : undefined;
 
   return (
     <div className="space-y-6">
@@ -258,10 +270,10 @@ export default function Flows() {
           </div>
 
           <div className="mt-4">
-            <FlowDiagram flow={selectedFlow} />
+            <FlowDiagram flow={selectedFlow} failedNodeId={selectedStatus === "failed" ? selectedLatest?.failedNodeId : undefined} />
           </div>
 
-          <div className="mt-4 flex items-center gap-2 border-t border-border pt-3">
+          <div className="mt-4 flex flex-wrap items-center gap-2 border-t border-border pt-3">
             <span className="text-[11px] text-muted-foreground">{F.lastRun}:</span>
             {!selectedStatus ? (
               <span className="flex items-center gap-1 text-xs text-muted-foreground">
@@ -272,6 +284,14 @@ export default function Flows() {
                 {selectedStatus === "success" ? <CheckCircle2 className="h-3 w-3" /> : <AlertCircle className="h-3 w-3" />}
                 {selectedStatus === "success" ? t.hermes.runs.success : t.hermes.runs.failed}
               </span>
+            )}
+            {selectedStatus === "failed" && failedNode && (
+              <span className="text-xs text-muted-foreground">
+                · {F.failedAt} <span className="font-medium text-red-400">{failedNode.name}</span>
+              </span>
+            )}
+            {selectedStatus === "failed" && selectedLatest?.error && (
+              <span className="w-full text-[11px] text-muted-foreground">{selectedLatest.error}</span>
             )}
           </div>
         </section>

@@ -213,6 +213,41 @@ const pt = {
       overviewCount: (n: number): string => `${n} fluxos no catálogo`,
       diagramTitle: "Diagrama",
       viewRuns: "Ver execuções",
+      failedAt: "Falhou em",
+      // Presentation-layer translation of the flows/*.json n8n export (see
+      // lib/flows/catalog.ts localizeFlow) — the export itself stays in
+      // English since it's a real n8n artifact, not something to rewrite.
+      catalog: {
+        heartbeat: {
+          name: "Pulsação",
+          description: "Grava um timestamp em hermes-flows a cada minuto para sinalizar ao Painel do Hermes que o motor está vivo.",
+          trigger: "Cron: a cada minuto",
+          nodes: { schedule: "Gatilho agendado", http: "Requisição HTTP", code: "Gravar pulsação" },
+        },
+        "outbox-consumer": {
+          name: "Processador da caixa de saída",
+          description: "Busca mensagens pendentes em hermes-outbox, entrega por e-mail via Resend e grava o status de envio/falha.",
+          trigger: "Cron: a cada minuto",
+          nodes: {
+            schedule: "Gatilho agendado",
+            supabase: "Supabase: buscar pendentes",
+            "code-split": "Dividir por canal",
+            resend: "E-mail via Resend",
+            "code-write": "Gravar status de envio",
+          },
+        },
+        "monthly-report": {
+          name: "Relatório mensal",
+          description: "Disparado pela agenda do Pluto: gera um relatório financeiro mensal e o envia por e-mail.",
+          trigger: "Cron: todo dia 1º do mês às 08:00",
+          nodes: {
+            schedule: "Cron: dia 1º do mês",
+            "pluto-data": "Buscar livro-razão do Pluto",
+            "code-gen": "Gerar HTML do relatório",
+            resend: "Enviar via Resend",
+          },
+        },
+      } as Record<string, { name: string; description: string; trigger: string; nodes: Record<string, string> }>,
     },
     runs: {
       eyebrow: "Execuções",
@@ -485,6 +520,41 @@ const en: typeof pt = {
       overviewCount: (n: number): string => `${n} flows in the catalog`,
       diagramTitle: "Diagram",
       viewRuns: "View runs",
+      failedAt: "Failed at",
+      // Mirrors the flows/*.json n8n export verbatim — English is the
+      // export's native language, so this table exists mainly so the pt/en
+      // dictionaries share one shape (see localizeFlow in lib/flows/catalog.ts).
+      catalog: {
+        heartbeat: {
+          name: "Heartbeat",
+          description: "Timestamps hermes-flows user_data every minute to signal the Hermes Dashboard that the engine is alive.",
+          trigger: "Cron: every minute",
+          nodes: { schedule: "Schedule Trigger", http: "HTTP Request", code: "Write heartbeat" },
+        },
+        "outbox-consumer": {
+          name: "Outbox Consumer",
+          description: "Polls hermes-outbox user_data for pending messages, delivers via Resend email, writes back sent/failed status.",
+          trigger: "Cron: every minute",
+          nodes: {
+            schedule: "Schedule Trigger",
+            supabase: "Supabase: fetch pending",
+            "code-split": "Split by channel",
+            resend: "Resend email",
+            "code-write": "Write sent status",
+          },
+        },
+        "monthly-report": {
+          name: "Monthly Report",
+          description: "Triggered by Pluto's schedule: generates a monthly financial report and sends it via email.",
+          trigger: "Cron: first day of every month at 08:00",
+          nodes: {
+            schedule: "Cron: 1st of month",
+            "pluto-data": "Fetch Pluto ledger",
+            "code-gen": "Generate report HTML",
+            resend: "Send via Resend",
+          },
+        },
+      } as Record<string, { name: string; description: string; trigger: string; nodes: Record<string, string> }>,
     },
     runs: {
       eyebrow: "Runs",
