@@ -116,7 +116,7 @@ export function isDemoMode(): boolean {
   }
 }
 
-function hasRealData(): boolean {
+export function hasRealData(): boolean {
   try {
     const outboxRaw = localStorage.getItem(OUTBOX_KEY);
     const flowsRaw = localStorage.getItem(FLOWS_KEY);

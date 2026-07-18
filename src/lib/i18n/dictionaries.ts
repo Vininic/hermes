@@ -328,6 +328,18 @@ const pt = {
       loadDemo: "Carregar dados de exemplo",
       startFresh: "Começar do zero",
     },
+    intro: {
+      title: "Bem-vindo ao Hermes",
+      lead: "Hermes é a camada de mensageria da suíte Olympus: uma fila única de mensagens, automações fixas que fazem essa fila andar, e os canais por onde tudo é entregue.",
+      howItWorks: "Como funciona",
+      continueLabel: "Entendi",
+      concepts: [
+        { title: "Caixa de saída", desc: "Toda mensagem que Chronos, Kairos ou Pluto precisam te mandar passa por uma fila única — como rascunhos de e-mail a caminho de sair." },
+        { title: "Fluxos", desc: "As automações fixas que fazem a fila andar: checam se o motor está vivo, entregam as mensagens pendentes, montam o relatório mensal." },
+        { title: "Canais", desc: "E-mail, Telegram e WhatsApp — pra onde as mensagens são entregues, com o status de configuração de cada um." },
+        { title: "Aetheris", desc: "O assistente da suíte, agora de chapéu de mensageiro — pergunte sobre entregas, canais e execuções." },
+      ],
+    },
   },
 };
 
@@ -634,6 +646,18 @@ const en: typeof pt = {
       description: "Load sample data to see the app working with messages, flows and runs already filled in — or start from scratch.",
       loadDemo: "Load sample data",
       startFresh: "Start from scratch",
+    },
+    intro: {
+      title: "Welcome to Hermes",
+      lead: "Hermes is the Olympus Suite's messaging layer: a single message queue, fixed automations that keep that queue moving, and the channels everything gets delivered through.",
+      howItWorks: "How it works",
+      continueLabel: "Got it",
+      concepts: [
+        { title: "Outbox", desc: "Every message Chronos, Kairos or Pluto need to send you passes through one queue — like email drafts on their way out." },
+        { title: "Flows", desc: "The fixed automations that keep the queue moving: check the engine is alive, deliver pending messages, build the monthly report." },
+        { title: "Channels", desc: "Email, Telegram and WhatsApp — where messages get delivered, with each one's setup status." },
+        { title: "Aetheris", desc: "The suite's assistant, now wearing a messenger's hat — ask about deliveries, channels and runs." },
+      ],
     },
   },
 };

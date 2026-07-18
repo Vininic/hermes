@@ -175,10 +175,11 @@ function QuickTestDialog() {
  *  search (Chronos), a delivery-progress readout (Kairos' board-progress
  *  pattern), and an always-available quick action (Chronos' "new block"
  *  dialog) — not just the two toggles it shipped with. */
-export default function Topbar() {
+export default function Topbar({ onOpenIntro }: { onOpenIntro: () => void }) {
   const location = useLocation();
   const t = useT();
   const nav = t.hermes.nav;
+  const I = t.hermes.intro;
 
   const crumb =
     location.pathname === "/dashboard" ? { icon: LayoutDashboard, label: nav.dashboard } :
@@ -207,6 +208,15 @@ export default function Topbar() {
 
       <div className="ml-auto flex items-center gap-3">
         <DeliveryProgress />
+        <button
+          type="button"
+          onClick={onOpenIntro}
+          title={I.howItWorks}
+          aria-label={I.howItWorks}
+          className="grid h-8 w-8 shrink-0 place-items-center rounded-md text-muted-foreground transition-colors hover:bg-accent/50 hover:text-primary"
+        >
+          <CircleHelp className="h-4 w-4" />
+        </button>
         <QuickTestDialog />
         <LanguageToggle />
         <ThemeToggle />

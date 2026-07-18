@@ -4,7 +4,7 @@ import {
   Activity, CircleHelp, Cloud, Inbox, LayoutDashboard,
   Menu, MonitorSmartphone, PanelLeftClose, Radio, Settings2, Sparkles, Workflow,
 } from "lucide-react";
-import DemoPrompt from "@/components/DemoPrompt";
+import WelcomeIntro from "@/components/WelcomeIntro";
 import Logo, { HermesMark } from "@/components/HermesLogo";
 import ProfileDialog from "@/components/ProfileDialog";
 import Topbar from "@/components/Topbar";
@@ -58,6 +58,7 @@ export default function AppLayout() {
   const [collapsed, setCollapsed] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
+  const [introOpen, setIntroOpen] = useState(false);
   const initial = session?.name.trim().charAt(0).toUpperCase() || "H";
 
   // Aetheris needs a real height chain (flex-1/h-full stretch to fill the
@@ -150,7 +151,7 @@ export default function AppLayout() {
       </aside>
 
       <ProfileDialog open={profileOpen} onOpenChange={setProfileOpen} />
-      <DemoPrompt />
+      <WelcomeIntro open={introOpen} onOpenChange={setIntroOpen} />
 
       <div className="flex min-w-0 flex-1 flex-col overflow-hidden">
         <header className="flex items-center justify-between border-b border-sidebar-border bg-sidebar px-4 py-3 md:hidden">
@@ -215,7 +216,7 @@ export default function AppLayout() {
           </SheetContent>
         </Sheet>
 
-        <Topbar />
+        <Topbar onOpenIntro={() => setIntroOpen(true)} />
 
         <main className={cn("hermes-surface flex-1 overflow-y-auto", fullHeight && "flex flex-col overflow-hidden")}>
           {fullHeight ? (
