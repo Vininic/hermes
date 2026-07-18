@@ -206,6 +206,9 @@ const pt = {
       neverRun: "Nunca executado",
       engineOffline: "O n8n não está rodando localmente — os fluxos de design estão indisponíveis, mas a entrega em produção continua funcionando.",
       noFlows: "Nenhum fluxo cadastrado.",
+      overview: "Visão geral",
+      overviewCount: (n: number): string => `${n} fluxos no catálogo`,
+      diagramTitle: "Diagrama",
     },
     runs: {
       eyebrow: "Execuções",
@@ -249,6 +252,11 @@ const pt = {
       lastSeen: "Visto há",
       recentRuns: "Execuções recentes",
       pendingCount: "Mensagens na fila",
+      volumeTitle: "Volume ao longo do tempo",
+      last14days: "Últimos 14 dias",
+      delivered: "entregues",
+      noActivity: "Sem atividade nos últimos 14 dias.",
+      viewAll: "Ver todas",
     },
     aetheris: {
       eyebrow: "Aetheris",
@@ -465,6 +473,9 @@ const en: typeof pt = {
       neverRun: "Never run",
       engineOffline: "n8n is not running locally — design flows are unavailable, but production delivery continues to work.",
       noFlows: "No flows registered.",
+      overview: "Overview",
+      overviewCount: (n: number): string => `${n} flows in the catalog`,
+      diagramTitle: "Diagram",
     },
     runs: {
       eyebrow: "Runs",
@@ -508,6 +519,11 @@ const en: typeof pt = {
       lastSeen: "Seen",
       recentRuns: "Recent runs",
       pendingCount: "Messages in queue",
+      volumeTitle: "Volume over time",
+      last14days: "Last 14 days",
+      delivered: "delivered",
+      noActivity: "No activity in the last 14 days.",
+      viewAll: "View all",
     },
     aetheris: {
       eyebrow: "Aetheris",

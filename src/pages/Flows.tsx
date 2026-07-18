@@ -1,16 +1,35 @@
 import { useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import {
-  AlertCircle, CheckCircle2, Clock, Code2, Database, Send, type LucideIcon,
+  AlertCircle, CalendarClock, CheckCircle2, Clock, Code2, Database, Radio, Send, type LucideIcon,
 } from "lucide-react";
+import { format } from "date-fns";
 import { loadFlowCatalog, flowBounds } from "@/lib/flows/catalog";
 import { getLatestRun } from "@/lib/flows/service";
 import { useFlowsDocument } from "@/lib/flows/store";
-import type { FlowDefinition, FlowNode } from "@/lib/flows/types";
+import type { FlowDefinition, FlowNode, RunRecord } from "@/lib/flows/types";
+import { alpha } from "@/lib/color";
 import { useT } from "@/lib/i18n/I18nProvider";
 import { cn } from "@/lib/utils";
 
 const NODE_H = 44, PAD = 32, ICON_W = 40, CHAR_W = 7.2, NODE_PAD_X = 20;
+
+// A distinct color + icon per flow (not per node) so the overview grid reads
+// as a scannable "which of these 3 pipelines is doing what" at a glance —
+// the thing that was previously missing: three big diagrams stacked with no
+// summary view above them, unlike Chronos' template gallery.
+const FLOW_ACCENT: Record<string, { icon: LucideIcon; color: string }> = {
+  heartbeat: { icon: Radio, color: "#C49A3A" },
+  "outbox-consumer": { icon: Send, color: "#4A8AB5" },
+  "monthly-report": { icon: CalendarClock, color: "#7D4E8C" },
+};
+const DEFAULT_FLOW_ACCENT = { icon: Code2, color: "#5E6B77" };
+
+function statusDotClass(status: RunRecord["status"] | null): string {
+  if (status === "success") return "bg-secondary";
+  if (status === "failed") return "bg-red-400";
+  return "bg-muted-foreground/40";
+}
 
 // n8n node "type" strings, mapped to a real icon + a suite-palette color —
 // so a trigger/data-source/logic/send step reads as different at a glance,
@@ -103,6 +122,50 @@ export default function Flows() {
         <h1 className="font-display mt-1.5 text-4xl text-primary">{F.title}</h1>
         <p className="mt-2 max-w-2xl text-sm text-muted-foreground">{F.subtitle}</p>
       </header>
+
+      {/* Overview: a scannable "what's active" grid, like Chronos' template
+          gallery — the summary view that was missing above the 3 stacked
+          diagrams. Each card is a compact status readout (icon, name,
+          trigger, last-run dot, node count) that jumps to Runs on click,
+          same target as clicking through to a full diagram below. */}
+      <section>
+        <div className="mb-3 flex items-center justify-between gap-2">
+          <h2 className="text-[11px] uppercase tracking-[0.18em] text-muted-foreground">{F.overview}</h2>
+          <span className="text-[11px] text-muted-foreground">{F.overviewCount(catalog.length)}</span>
+        </div>
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          {catalog.map((flow) => {
+            const latest = getLatestRun(doc, flow.id);
+            const status = latest?.status ?? null;
+            const { icon: Icon, color } = FLOW_ACCENT[flow.id] ?? DEFAULT_FLOW_ACCENT;
+            return (
+              <button
+                key={flow.id}
+                type="button"
+                onClick={() => navigate(`/runs?flow=${flow.id}`)}
+                className="hermes-card flex items-center gap-3 p-4 text-left transition-colors hover:bg-card/80"
+              >
+                <div className="grid h-10 w-10 shrink-0 place-items-center rounded-lg" style={{ backgroundColor: alpha(color, "1A") }}>
+                  <Icon className="h-5 w-5" style={{ color }} />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-center gap-2">
+                    <span className="truncate text-sm font-medium text-primary">{flow.name}</span>
+                    <span className={cn("h-1.5 w-1.5 shrink-0 rounded-full", statusDotClass(status))} title={status ?? F.neverRun} />
+                  </div>
+                  <div className="mt-0.5 flex items-center gap-1.5 truncate text-[11px] text-muted-foreground">
+                    <span>{flow.nodes.length} {F.nodes}</span>
+                    <span>·</span>
+                    <span className="truncate">{latest ? format(new Date(latest.startedAt), "dd/MM HH:mm") : F.neverRun}</span>
+                  </div>
+                </div>
+              </button>
+            );
+          })}
+        </div>
+      </section>
+
+      <h2 className="text-[11px] uppercase tracking-[0.18em] text-muted-foreground">{F.diagramTitle}</h2>
 
       <div className="grid min-w-0 gap-6">
         {catalog.map((flow) => {
