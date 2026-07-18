@@ -3,7 +3,8 @@ import { useNavigate } from "react-router-dom";
 import { ArrowRight, Cloud, Loader2, MonitorSmartphone } from "lucide-react";
 import { useAuth } from "@/lib/auth";
 import { toast } from "@/components/ui/sonner";
-import Logo, { HermesMark } from "@/components/HermesLogo";
+import Logo from "@/components/HermesLogo";
+import KineticRelay from "@/components/three/KineticRelay";
 import { LanguageToggle } from "@/components/LanguageToggle";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { Button } from "@/components/ui/button";
@@ -62,8 +63,8 @@ export default function Login() {
             <ThemeToggle variant="dark" />
           </div>
         </div>
-        <div className="relative flex flex-1 items-center justify-center">
-          <HermesMark className="h-40 w-40 animate-float-slow text-secondary-soft opacity-90" />
+        <div className="relative min-h-[320px] flex-1">
+          <KineticRelay />
         </div>
       </div>
 
