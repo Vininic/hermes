@@ -2,12 +2,13 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import {
   Check, Copy, FileText, History, LayoutList, Loader2, PanelRightClose, PanelRightOpen,
-  Send, Sparkles, Square, Undo2, Volume2,
+  Send, Sparkles, Square, Undo2, Volume2, X,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "@/components/ui/sonner";
 import Markdown from "@/components/Markdown";
+import ActionPill from "@/components/ActionPill";
 import { HermesMark } from "@/components/HermesLogo";
 import { useT } from "@/lib/i18n/I18nProvider";
 import { useI18n } from "@/lib/i18n/I18nProvider";
@@ -23,7 +24,7 @@ import {
 } from "@/lib/ai/settings";
 import { streamChat, type ChatMessage } from "@/lib/ai/providers";
 import { buildSystemPrompt } from "@/lib/ai/context";
-import { parseActions, applyAction, describeAction } from "@/lib/ai/actions";
+import { parseActions, applyAction, describeAction, type AetherisAction } from "@/lib/ai/actions";
 import { loadHistory, logHistory, markUndone, type HistoryEntry } from "@/lib/ai/actionHistory";
 
 type Tab = "overview" | "digest" | "history";
@@ -51,6 +52,7 @@ export default function Aetheris() {
   const [settings, setSettings] = useState<AISettings>(() => loadSettings());
   const [speakingId, setSpeakingId] = useState<string | null>(null);
   const [copiedId, setCopiedId] = useState<string | null>(null);
+  const [proposal, setProposal] = useState<AetherisAction[] | null>(null);
   const chatEndRef = useRef<HTMLDivElement>(null);
   const abortRef = useRef<AbortController | null>(null);
 
@@ -70,12 +72,14 @@ export default function Aetheris() {
 
   const switchSession = useCallback((id: string) => {
     setActiveId(id);
+    setProposal(null);
   }, []);
 
   const handleNewSession = useCallback(() => {
     const next = addSession(sessions);
     setSessions(next);
     setActiveId(next[0].id);
+    setProposal(null);
   }, [sessions]);
 
   const handleDeleteSession = useCallback((id: string) => {
@@ -124,35 +128,10 @@ export default function Aetheris() {
       let currentDoc = doc;
 
       if (actions.length > 0 && settings.autonomy === "confirm") {
-        const descriptions = actions.map((a) => describeAction(currentDoc, a));
-        const confirmed = window.confirm(
-          `O Aetheris quer:\n${descriptions.map((d) => `• ${d}`).join("\n")}\n\nAplicar?`,
-        );
-        if (!confirmed) {
-          replyText += "\n\n(Ações não aplicadas — o usuário recusou.)";
-        } else {
-          const beforeSnapshot = JSON.parse(JSON.stringify(currentDoc)) as typeof currentDoc;
-          let allOk = true;
-          for (const action of actions) {
-            const result2 = applyAction(currentDoc, action);
-            if (typeof result2 === "string") {
-              replyText += `\n\nErro ao aplicar "${action.type}": ${result2}`;
-              allOk = false;
-            } else {
-              currentDoc = result2;
-            }
-          }
-          if (allOk) {
-            logHistory(beforeSnapshot, descriptions.map((d) => d));
-            setHistory(loadHistory());
-            replyText += "\n\n(Ações aplicadas com sucesso.)";
-            actions.forEach((a) => {
-              if (a.type === "retry_message") retry(a.messageId);
-              if (a.type === "cancel_message") cancel(a.messageId);
-            });
-            toast("Ações aplicadas!", { description: descriptions.join("; ") });
-          }
-        }
+        // Shown as a proper in-chat proposal card (ActionPill chips + Apply/
+        // Dismiss below) instead of a native window.confirm() dialog — see
+        // applyProposal/dismissProposal and the card rendered near the input.
+        setProposal(actions);
       } else if (actions.length > 0) {
         const beforeSnapshot = JSON.parse(JSON.stringify(currentDoc)) as typeof currentDoc;
         const descriptions = actions.map((a) => describeAction(currentDoc, a));
@@ -192,6 +171,35 @@ export default function Aetheris() {
       abortRef.current = null;
     }
   }, [draft, sending, sessions, activeId, doc, settings, systemPrompt, retry, cancel]);
+
+  const applyProposal = useCallback(() => {
+    if (!proposal) return;
+    const beforeSnapshot = JSON.parse(JSON.stringify(doc)) as typeof doc;
+    const descriptions = proposal.map((a) => describeAction(doc, a));
+    let currentDoc = doc;
+    let allOk = true;
+    for (const action of proposal) {
+      const result = applyAction(currentDoc, action);
+      if (typeof result === "string") {
+        toast(`Erro ao aplicar "${action.type}"`, { description: result });
+        allOk = false;
+      } else {
+        currentDoc = result;
+      }
+    }
+    if (allOk) {
+      logHistory(beforeSnapshot, descriptions);
+      setHistory(loadHistory());
+      proposal.forEach((a) => {
+        if (a.type === "retry_message") retry(a.messageId);
+        if (a.type === "cancel_message") cancel(a.messageId);
+      });
+      toast("Ações aplicadas!", { description: descriptions.join("; ") });
+    }
+    setProposal(null);
+  }, [proposal, doc, retry, cancel]);
+
+  const dismissProposal = useCallback(() => setProposal(null), []);
 
   const stopGenerating = () => abortRef.current?.abort();
 
@@ -342,6 +350,27 @@ export default function Aetheris() {
               </div>
             )}
           </div>
+
+          {proposal && (
+            <div className="mx-auto w-full max-w-3xl shrink-0 border-t border-border px-6 pt-3">
+              <div className="rounded-xl border border-secondary/40 bg-surface-raised p-4">
+                <div className="text-[11px] uppercase tracking-[0.22em] text-secondary">O Aetheris quer</div>
+                <div className="mt-2 space-y-1.5">
+                  {proposal.map((a, i) => (
+                    <ActionPill key={i} action={a} doc={doc} />
+                  ))}
+                </div>
+                <div className="mt-3 flex gap-2">
+                  <Button size="sm" onClick={applyProposal}>
+                    <Check className="mr-1.5 h-3.5 w-3.5" /> Aplicar
+                  </Button>
+                  <Button size="sm" variant="ghost" onClick={dismissProposal}>
+                    <X className="mr-1.5 h-3.5 w-3.5" /> Descartar
+                  </Button>
+                </div>
+              </div>
+            </div>
+          )}
 
           <div className="shrink-0 border-t border-border p-3">
             <div className="mx-auto flex w-full max-w-3xl items-center justify-between px-1 pb-1.5 text-[10px] text-muted-foreground">
